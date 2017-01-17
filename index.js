@@ -87,10 +87,6 @@ var unwire = function() {
 };
 var zip = new JSZip();
 wire();
-// addRequestCallback(function (xhr) {
-//   if (!xhr.resource.url.match(/(\.js$|.html$)/g)) {
-//   }
-// });
 addResponseCallback(function(xhr) {
     if (!xhr.resource.url.match(/(\.js$|.html$)/g)) {
         var requestName = xhr.resource.url.split('?')[0].split('/').slice(-1)[0] + '.json';
