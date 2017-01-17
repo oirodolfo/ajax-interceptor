@@ -30,7 +30,6 @@ function fireCallbacks(callbacks, xhr) {
         callbacks[i](xhr);
     }
 }
-
 var addRequestCallback = function(callback) {
     requestCallbacks.push(callback);
 };
@@ -59,11 +58,9 @@ function proxifyOnReadyStateChange(xhr) {
         };
     }
 }
-
 var isWired = function() {
     return wired;
 }
-
 var wire = function() {
     if (wired) throw new Error('Ajax interceptor already wired');
     // Override send method of all XHR requests
@@ -83,16 +80,17 @@ var wire = function() {
     };
     wired = true;
 };
-
 var unwire = function() {
     if (!wired) throw new Error('Ajax interceptor not currently wired');
     XMLHttpRequest.prototype.send = RealXHRSend;
     wired = false;
 };
 var zip = new JSZip();
-
 wire();
-
+// addRequestCallback(function (xhr) {
+//   if (!xhr.resource.url.match(/(\.js$|.html$)/g)) {
+//   }
+// });
 addResponseCallback(function(xhr) {
     if (!xhr.resource.url.match(/(\.js$|.html$)/g)) {
         var requestName = xhr.resource.url.split('?')[0].split('/').slice(-1)[0] + '.json';
@@ -101,12 +99,12 @@ addResponseCallback(function(xhr) {
         zip.file(requestName, xhr.response);
     }
 });
-
 unsafeWindow.downloadStubZip = function() {
     zip.generateAsync({
         type: 'blob'
     }).then(function(content) {
         // see FileSaver.js
-        saveAs(content, 'example.zip');
+        var timeStamp = (new Date()).toISOString().slice(0, 10);
+        saveAs(content, 'stubResponses' + timeStamp + '.zip');
     });
 }
