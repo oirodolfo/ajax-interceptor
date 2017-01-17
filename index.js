@@ -2,7 +2,7 @@
 // @name        CVS stub
 // @namespace   cvs.xhr.interceptor
 // @description XHR stub creator
-// @include     https://www-qa1.cvs.com/pharmacy/*
+// @include     https://*
 // @version     1
 // @grant       none
 // @require     https://stuk.github.io/jszip/vendor/FileSaver.js
