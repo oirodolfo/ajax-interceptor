@@ -1,3 +1,12 @@
+// ==UserScript==
+// @name        CVS stub
+// @namespace   cvs.xhr.interceptor
+// @description XHR stub creator
+// @include     https://www-qa1.cvs.com/pharmacy/
+// @version     1
+// @grant       none
+// ==/UserScript==
+
 'use strict';
 
 var COMPLETED_READY_STATE = 4;
@@ -7,9 +16,7 @@ var RealXHRSend = XMLHttpRequest.prototype.send;
 var requestCallbacks = [];
 var responseCallbacks = [];
 
-
 var wired = false;
-
 
 function arrayRemove(array,item) {
     var index = array.indexOf(item);
@@ -28,18 +35,18 @@ function fireCallbacks(callbacks,xhr) {
 }
 
 
-exports.addRequestCallback = function(callback) {
+var addRequestCallback = function(callback) {
     requestCallbacks.push(callback);
 };
-exports.removeRequestCallback = function(callback) {
+var removeRequestCallback = function(callback) {
     arrayRemove(requestCallbacks,callback);
 };
 
 
-exports.addResponseCallback = function(callback) {
+var addResponseCallback = function(callback) {
     responseCallbacks.push(callback);
 };
-exports.removeResponseCallback = function(callback) {
+var removeResponseCallback = function(callback) {
     arrayRemove(responseCallbacks,callback);
 };
 
@@ -62,11 +69,11 @@ function proxifyOnReadyStateChange(xhr) {
 }
 
 
-exports.isWired = function() {
+var isWired = function() {
     return wired;
 }
 
-exports.wire = function() {
+var wire = function() {
     if ( wired ) throw new Error("Ajax interceptor already wired");
 
     // Override send method of all XHR requests
@@ -92,8 +99,18 @@ exports.wire = function() {
 };
 
 
-exports.unwire = function() {
+var unwire = function() {
     if ( !wired ) throw new Error("Ajax interceptor not currently wired");
     XMLHttpRequest.prototype.send = RealXHRSend;
     wired = false;
 };
+
+wire();
+
+addRequestCallback(function(xhr) {
+    console.debug("request",xhr);
+});
+
+.addResponseCallback(function(xhr) {
+    console.debug("response",xhr);
+});
