@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        CVS stub
+// @name        stub saver
 // @namespace   cvs.xhr.interceptor
 // @description XHR stub creator
 // @include     https://*
