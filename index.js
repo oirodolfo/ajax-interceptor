@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name        stub saver
-// @namespace   cvs.xhr.interceptor
+// @name        Stub generator
+// @namespace   stub.xhr.interceptor
 // @description XHR stub creator
 // @include     https://*
 // @version     1
@@ -8,7 +8,6 @@
 // @require     https://stuk.github.io/jszip/vendor/FileSaver.js
 // @require     https://unpkg.com/jszip@latest/dist/jszip.js
 // @require     https://unpkg.com/lokijs@latest/build/lokijs.min.js
-// @require     https://unpkg.com/lokijs@latest/build/loki-indexed-adapter.min.js
 // @run-at      document-start
 // ==/UserScript==
 
@@ -92,10 +91,7 @@ var zip = new JSZip();
 
 /* DB STUBBING (AKA DUBSTEPPING) */
 
-var db = new loki('cvsStub.db', {
-	autosave: true,
-	autosaveInterval: 1000, // 1 seconds
-});
+var db = new loki('stub.db');
 
 var items = db.addCollection('responses');
 
@@ -110,12 +106,17 @@ addRequestCallback(function (xhr) {
 	if (!xhr.resource.url.match(/(\.js$|.html$)/g)) {
 		var splitURL = xhr.resource.url.split('?');
 		var requestName = splitURL[0].split('/').slice(-1)[0];
+		var requestParams = splitURL[1] ? splitURL[1] : '';
 		console.log(requestName, ' - ', xhr.send.arguments[0]);
-		var response = items.findOne({ name: requestName, params: splitURL[1] ? splitURL[1] : '', requestBody: xhr.sentBody[0] });
-		if (!response) {
+		var response = items.chain().find({ name: requestName }).where(function (obj) {
+			var condition1 = obj.params === requestParams;
+			var condition2 = obj.requestBody === xhr.sentBody[0];
+			return condition1 && condition2;
+		}).data();
+		if (response.length == 0) {
 			items.insert({
 				name: requestName,
-				params: splitURL[1] ? splitURL[1] : '',
+				params: requestParams,
 				requestBody: xhr.sentBody[0],
 				response: ''
 			});
@@ -126,14 +127,20 @@ addRequestCallback(function (xhr) {
 addResponseCallback(function (xhr) {
 	if (!xhr.resource) return console.log('FAIL -', xhr);
 	if (!xhr.resource.url.match(/(\.js$|.html$)/g)) {
-		console.log(xhr);
 		var splitURL = xhr.resource.url.split('?');
 		var requestName = splitURL[0].split('/').slice(-1)[0];
+		var requestParams = splitURL[1] ? splitURL[1] : '';
 		console.debug('Response : ', requestName);
-		var response = items.findOne({ name: requestName, params: splitURL[1] ? splitURL[1] : '', requestBody: xhr.sentBody[0] });
-		console.log(response, ' with ', xhr.sentBody[0]);
-		response.response = xhr.response;
-		items.update(response);
+		var res = items.chain().find({ name: requestName }).where(function (obj) {
+			var condition1 = obj.params === requestParams;
+			var condition2 = obj.requestBody === xhr.sentBody[0];
+			return condition1 && condition2;
+		}).update(function (obj) {
+			console.log('UPDATING', requestName)
+			obj.response = xhr.response;
+			return obj;
+		});
+		console.log(res);
 	}
 });
 
