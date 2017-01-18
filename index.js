@@ -2,11 +2,10 @@
 // @name        Stub generator
 // @namespace   stub.xhr.interceptor
 // @description XHR stub creator
-// @include     https://*
-// @version     1
+// @include     https://www-qa1.cvs.com/pharmacy/*
+// @version     1.1
 // @grant       none
 // @require     https://stuk.github.io/jszip/vendor/FileSaver.js
-// @require     https://unpkg.com/jszip@latest/dist/jszip.js
 // @require     https://unpkg.com/lokijs@latest/build/lokijs.min.js
 // @run-at      document-start
 // ==/UserScript==
@@ -87,7 +86,9 @@ var unwire = function () {
 	wired = false;
 };
 
-var zip = new JSZip();
+/**
+ * Begin custom code
+ */
 
 /* DB STUBBING (AKA DUBSTEPPING) */
 
@@ -107,7 +108,7 @@ addRequestCallback(function (xhr) {
 		var splitURL = xhr.resource.url.split('?');
 		var requestName = splitURL[0].split('/').slice(-1)[0];
 		var requestParams = splitURL[1] ? splitURL[1] : '';
-		console.log(requestName, ' - ', xhr.send.arguments[0]);
+		console.debug('STUB :: create - ', requestName);
 		var response = items.chain().find({ name: requestName }).where(function (obj) {
 			var condition1 = obj.params === requestParams;
 			var condition2 = obj.requestBody === xhr.sentBody[0];
@@ -130,30 +131,20 @@ addResponseCallback(function (xhr) {
 		var splitURL = xhr.resource.url.split('?');
 		var requestName = splitURL[0].split('/').slice(-1)[0];
 		var requestParams = splitURL[1] ? splitURL[1] : '';
-		console.debug('Response : ', requestName);
+		console.debug('STUB :: update - ', requestName);
 		var res = items.chain().find({ name: requestName }).where(function (obj) {
 			var condition1 = obj.params === requestParams;
 			var condition2 = obj.requestBody === xhr.sentBody[0];
 			return condition1 && condition2;
 		}).update(function (obj) {
-			console.log('UPDATING', requestName)
 			obj.response = xhr.response;
 			return obj;
 		});
-		console.log(res);
 	}
 });
 
-// Download function
-unsafeWindow.downloadStubZip = function () {
-	// zip.generateAsync({
-	// 	type: 'blob'
-	// }).then(function (content) {
-	// 	// see FileSaver.js
-	// 	var timeStamp = (new Date()).toISOString().slice(0, 10);
-	// 	saveAs(content, 'stubResponses' + timeStamp + '.zip');
-	// });
-	var timeStamp = (new Date()).toISOString().slice(0, 10);
+var downloadStubZip = function () {
+	var timeStamp = (new Date()).toISOString().replace(':', '.');
 	var data = items.data.map(function (item) {
 		return {
 			name: item.name,
@@ -165,3 +156,17 @@ unsafeWindow.downloadStubZip = function () {
 	// console.log(JSON.stringify(items));
 	saveAs(new Blob([JSON.stringify(data)], { type: "application/json" }), 'stubResponses' + timeStamp + '.json');
 }
+
+// Add a small download button for convenience
+var downloadButton = document.createElement('div');
+var downloadImage = 'http://sideventurenetwork.com/wp-content/uploads/2016/05/black-down-arrow.png';
+downloadButton.setAttribute('id', 'downloadButton');
+downloadButton.setAttribute('style', 'width:30px;height:30px;background-image:url(' + downloadImage + ');background-size:contain;cursor:pointer;position:fixed;right:30px;top:30px;');
+downloadButton.onclick = downloadStubZip;
+
+window.addEventListener('load', function () {
+	document.body.appendChild(downloadButton);
+});
+
+// Download function
+// unsafeWindow.downloadStubZip = downloadStubZip;
